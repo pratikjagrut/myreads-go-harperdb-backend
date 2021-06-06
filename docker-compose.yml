@@ -14,5 +14,5 @@ services:
       - 9925:9925
       - 31283:31283
       - 12345:12345
-    volumes:
-      - ./hdb_data/:/opt/harperdb/hdb/
+    # volumes:
+    #   - ./hdb_data/:/opt/harperdb/hdb/

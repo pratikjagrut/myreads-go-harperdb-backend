@@ -1,4 +1,4 @@
-module github.com/pratikjagrut/go-jwt-auth-harperDB
+module github.com/pratikjagrut/myreads-go-backend
 
 go 1.15
 

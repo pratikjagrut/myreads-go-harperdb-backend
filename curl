@@ -1,0 +1,15 @@
+curl --location --request POST 'https://app-1-febas.harperdbcloud.com' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic SERCX0FETUlOOnBhc3N3b3Jk' \
+--data-raw '{
+  "operation":"sql",
+  "sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''Simon'\'', '\''p@p.in'\'', '\''$2a$10$aZCyOsAhragF1r9nN3.rDOCn5TatQFZtcTQtleXuiqV0vbzErDeVe'\'')"
+}'
+
+curl --location --request POST 'https://app-1-febas.harperdbcloud.com' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic SERCX0FETUlOOnBhc3N3b3Jk' \
+--data-raw '{
+  "operation":"sql",
+  "sql": "INSERT INTO myreads.books (name, userid, status) VALUES('\''xyz'\'', '\''2d6ed563-9b89-4065-a3cc-fb0a3d5d769a'\'', '\''reading'\'')"
+}'
