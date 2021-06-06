@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/pratikjagrut/go-jwt-auth-harperDB/database"
@@ -9,7 +11,7 @@ import (
 
 func main() {
 
-	database.Init("https://app-1-febas.harperdbcloud.com", "HDB_ADMIN", "password", "goodreads")
+	database.Init(os.Getenv("HARPERDB_HOST"), os.Getenv("HARPERDB_UNAME"), os.Getenv("HARPERDB_PSWD"), "myreads")
 
 	app := fiber.New()
 

@@ -28,16 +28,33 @@ func Register(c *fiber.Ctx) error {
 		Password: password,
 	}
 
-	tableName := database.GlobalClient.Schema + ".users"
-	sqlInsert := fmt.Sprintf("INSERT INTO %s (name, email, password) VALUES('%s', '%s', '%s')",
-		tableName, user.Name, user.Email, user.Password)
-
-	_, err := database.GlobalClient.DB.SQLExec(sqlInsert)
+	res, err := database.GlobalClient.Where("users", "email", user.Email)
 	if err != nil {
-		err1 := fmt.Sprintf("ERROR: Register: %v", err)
 		c.Status(fiber.StatusExpectationFailed)
 		return c.JSON(fiber.Map{
-			"message": err1,
+			"message": fmt.Sprintf("ERROR: Register: %v", err),
+		})
+	}
+
+	if len(res) != 0 {
+		c.Status(fiber.StatusFound)
+		return c.JSON(fiber.Map{
+			"message": "This email id is already registered.",
+		})
+	}
+
+	var m = map[string]string{
+		"email":    user.Email,
+		"name":     user.Name,
+		"password": string(user.Password),
+	}
+
+	_, err = database.GlobalClient.Insert("users", m)
+
+	if err != nil {
+		c.Status(fiber.StatusExpectationFailed)
+		return c.JSON(fiber.Map{
+			"message": fmt.Sprintf("ERROR: Register: %v", err),
 		})
 	}
 	return c.JSON(user)
@@ -50,17 +67,11 @@ func Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	tableName := database.GlobalClient.Schema + ".users"
-	sqlStmt := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, data["email"])
-	var res []interface{}
-
-	err := database.GlobalClient.DB.SQLSelect(&res, sqlStmt)
-
+	res, err := database.GlobalClient.Where("users", "email", data["email"])
 	if err != nil {
-		err1 := fmt.Sprintf("ERROR: Login: %v", err)
 		c.Status(fiber.StatusExpectationFailed)
 		return c.JSON(fiber.Map{
-			"message": err1,
+			"message": fmt.Sprintf("ERROR: Login: %v", err),
 		})
 	}
 
@@ -132,11 +143,7 @@ func User(c *fiber.Ctx) error {
 
 	claims := token.Claims.(*jwt.StandardClaims)
 
-	tableName := database.GlobalClient.Schema + ".users"
-	sqlStmt := fmt.Sprintf("SELECT * FROM %s WHERE id = '%s'", tableName, claims.Issuer)
-	var res []interface{}
-
-	err = database.GlobalClient.DB.SQLSelect(&res, sqlStmt)
+	res, err := database.GlobalClient.Where("users", "id", claims.Issuer)
 
 	if err != nil {
 		c.Status(fiber.StatusExpectationFailed)
