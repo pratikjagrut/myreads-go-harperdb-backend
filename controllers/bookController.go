@@ -85,7 +85,7 @@ func GetBoooks(c *fiber.Ctx, which *BookStatus) error {
 	if len(res) == 0 {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
-			"message": "Empty book shelve.",
+			"message": "Empty bookshelf",
 		})
 	}
 

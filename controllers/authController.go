@@ -95,6 +95,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	if len(res) == 0 {
+		log.Println("ERROR: Login: User Not Found")
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
 			"message": "User Not Found",
