@@ -6,4 +6,5 @@ type Book struct {
 	Status string `json:"status"`
 	Userid string `json:"userid"`
 	Image  string `json:"image"`
+	Author string `json:"author"`
 }

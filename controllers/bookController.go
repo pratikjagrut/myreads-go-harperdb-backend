@@ -44,6 +44,7 @@ func BookEntry(c *fiber.Ctx) error {
 		Userid: issuer,
 		Status: fmt.Sprintf("%v", data["status"]),
 		Image:  fmt.Sprintf("%v", data["image"]),
+		Author: fmt.Sprintf("%v", data["author"]),
 	}
 
 	tableName := database.GlobalClient.Table["books"]
@@ -72,8 +73,8 @@ func BookEntry(c *fiber.Ctx) error {
 		})
 	}
 
-	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, image) VALUES('%s', '%s', '%s', '%s')",
-		tableName, book.Name, book.Status, book.Userid, book.Image)
+	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, image, author) VALUES('%s', '%s', '%s', '%s', '%s')",
+		tableName, book.Name, book.Status, book.Userid, book.Image, book.Author)
 
 	log.Println("QUERY EXEC: INSERT BOOK: ", sql)
 	res, err := database.GlobalClient.DB.SQLExec(sql)
@@ -144,6 +145,16 @@ func UpdateStatus(c *fiber.Ctx) error {
 		})
 	}
 
+	_, err := getIssuer(c)
+	if err != nil {
+		log.Println("ERROR: UpdateStatus: getIssuer", err)
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Unauthorized",
+			"status":  fiber.StatusUnauthorized,
+		})
+	}
+
 	book := &models.Book{
 		Id:     data["id"],
 		Status: data["status"],
@@ -191,19 +202,24 @@ func DeleteBook(c *fiber.Ctx) error {
 		})
 	}
 
-	issuer, err := getIssuer(c)
+	_, err := getIssuer(c)
 	if err != nil {
-		return err
+		log.Println("ERROR: DeleteBook: getIssuer", err)
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Unauthorized",
+			"status":  fiber.StatusUnauthorized,
+		})
 	}
 
 	book := &models.Book{
-		Name:   data["name"],
-		Userid: issuer,
+		Id:   data["id"],
+		Name: data["name"],
 	}
 
 	tableName := database.GlobalClient.Table["books"]
-	sql := fmt.Sprintf("DELETE FROM %s WHERE userid = '%s' AND name = '%s'",
-		tableName, book.Userid, book.Name)
+	sql := fmt.Sprintf("DELETE FROM %s WHERE id = '%s'",
+		tableName, book.Id)
 
 	log.Println("QUERY EXEC: DeleteBook: ", sql)
 	res, err := database.GlobalClient.DB.SQLExec(sql)
@@ -228,7 +244,7 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	c.Status(fiber.StatusOK)
 	return c.JSON(fiber.Map{
-		"message": "Book removed from your bookshelf",
+		"message": fmt.Sprintf("Book \"%s\" removed from your bookshelf.", book.Name),
 		"status":  fiber.StatusOK,
 	})
 }
