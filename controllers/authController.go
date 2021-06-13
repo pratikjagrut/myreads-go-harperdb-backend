@@ -19,7 +19,11 @@ func Register(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&data); err != nil {
 		log.Println("ERROR: Register: ", err)
-		return err
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error",
+			"status":  fiber.StatusInternalServerError,
+		})
 	}
 
 	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
@@ -39,9 +43,10 @@ func Register(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Println("ERROR: Register: ", err)
-		c.Status(fiber.StatusExpectationFailed)
+		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
-			"message": fmt.Sprintf("ERROR: Register: %v", err),
+			"message": "Internal Server Error",
+			"status":  fiber.StatusInternalServerError,
 		})
 	}
 
@@ -50,6 +55,7 @@ func Register(c *fiber.Ctx) error {
 		c.Status(fiber.StatusFound)
 		return c.JSON(fiber.Map{
 			"message": "This email id is already registered.",
+			"status":  fiber.StatusFound,
 		})
 	}
 
@@ -61,14 +67,18 @@ func Register(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Println("ERROR: Register: ", err)
-		c.Status(fiber.StatusExpectationFailed)
+		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
-			"message": fmt.Sprintf("ERROR: Register: %v", err),
+			"message": "Internal Server Error",
+			"status":  fiber.StatusInternalServerError,
 		})
 	}
 	log.Println("REGISTER: INSERT RES: ", res1)
 
-	return c.JSON(user)
+	return c.JSON(fiber.Map{
+		"message": "User registration successful",
+		"status":  fiber.StatusOK,
+	})
 }
 
 func Login(c *fiber.Ctx) error {
@@ -76,7 +86,11 @@ func Login(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&data); err != nil {
 		log.Println("ERROR: Login: ", err)
-		return err
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error",
+			"status":  fiber.StatusInternalServerError,
+		})
 	}
 
 	tableName := database.GlobalClient.Table["users"]
@@ -88,9 +102,10 @@ func Login(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Println("ERROR: Login: ", err)
-		c.Status(fiber.StatusExpectationFailed)
+		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
 			"message": fmt.Sprintf("ERROR: Login: %v", err),
+			"status":  fiber.StatusInternalServerError,
 		})
 	}
 
@@ -99,6 +114,7 @@ func Login(c *fiber.Ctx) error {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
 			"message": "User Not Found",
+			"status":  fiber.StatusNotFound,
 		})
 	}
 
@@ -114,9 +130,10 @@ func Login(c *fiber.Ctx) error {
 
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
 		log.Println("ERROR: Login: ", err)
-		c.Status(fiber.StatusBadRequest)
+		c.Status(fiber.StatusUnauthorized)
 		return c.JSON(fiber.Map{
-			"message": "Incorrect Password",
+			"message": "Incorrect credentials",
+			"status":  fiber.StatusUnauthorized,
 		})
 	}
 
@@ -131,7 +148,8 @@ func Login(c *fiber.Ctx) error {
 		log.Println("ERROR: Login: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
-			"message": "Could not login",
+			"message": "Internal Server Error",
+			"status":  fiber.StatusInternalServerError,
 		})
 	}
 
@@ -146,11 +164,20 @@ func Login(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Login Success",
+		"status":  fiber.StatusOK,
+		"user":    user,
 	})
+	// return c.JSON(user)
 }
 
 func getIssuer(c *fiber.Ctx) (string, error) {
 	cookie := c.Cookies("jwt")
+
+	if cookie == "" {
+		log.Println("ERROR: getIssuer: empty cookie")
+		c.Status(fiber.StatusUnauthorized)
+		return "", fmt.Errorf("ERROR: getIssuer: empty cookie")
+	}
 
 	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SecretKey), nil
@@ -158,10 +185,8 @@ func getIssuer(c *fiber.Ctx) (string, error) {
 
 	if err != nil {
 		log.Println("ERROR: getIssuer: ", err)
-		c.Status(fiber.StatusUnauthorized)
-		return "", c.JSON(fiber.Map{
-			"message": "Unauthenticated",
-		})
+		c.Status(fiber.StatusInternalServerError)
+		return "", fmt.Errorf("ERROR: getIssuer: %v", err)
 	}
 
 	claims := token.Claims.(*jwt.StandardClaims)
@@ -173,7 +198,11 @@ func getIssuer(c *fiber.Ctx) (string, error) {
 func User(c *fiber.Ctx) error {
 	issuer, err := getIssuer(c)
 	if err != nil {
-		return err
+		log.Println("ERROR: User: getIssuer", err)
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
 	}
 
 	tableName := database.GlobalClient.Table["users"]
@@ -208,7 +237,11 @@ func User(c *fiber.Ctx) error {
 		Password: []byte(fmt.Sprintf("%v", fetchedUser["password"])),
 	}
 
-	return c.JSON(user)
+	return c.JSON(fiber.Map{
+		"message": "Fetch user successful",
+		"status":  fiber.StatusOK,
+		"user":    user,
+	})
 }
 
 func Logout(c *fiber.Ctx) error {
@@ -223,5 +256,6 @@ func Logout(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Logout Success.",
+		"status":  fiber.StatusOK,
 	})
 }

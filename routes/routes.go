@@ -23,8 +23,9 @@ func Setup(app *fiber.App) {
 	app.Get("/api/books/finished", func(c *fiber.Ctx) error {
 		return controllers.GetBoooks(c, &controllers.Finished)
 	})
-	app.Get("/api/books/wanttoread", func(c *fiber.Ctx) error {
-		return controllers.GetBoooks(c, &controllers.WantToRead)
+	app.Get("/api/books/wishlist", func(c *fiber.Ctx) error {
+		return controllers.GetBoooks(c, &controllers.Wishlist)
 	})
 	app.Post("/api/books/updatestatus", controllers.UpdateStatus)
+	app.Post("/api/books/deletebook", controllers.DeleteBook)
 }

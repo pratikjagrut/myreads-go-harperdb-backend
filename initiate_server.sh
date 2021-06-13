@@ -55,9 +55,9 @@ curl --location --request POST $1 \
 --header "Authorization: Basic $2" \
 --data-raw '{
   "operation":"sql",
-  "sql": "INSERT INTO myreads.books (name, userid, status) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
+  "sql": "INSERT INTO myreads.books (name, userid, status, image) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
 }'
 
-printf "\n======================= Starting Server ======================="
+printf "\n======================= Starting Server =======================\n"
 
 HARPERDB_HOST=$1 HARPERDB_UNAME=$3 HARPERDB_PSWD=$4 go run main.go
