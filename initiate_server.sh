@@ -1,14 +1,12 @@
 #!/bin/sh
 
-set -o pipefail
-
 printf "======================= Initialising database ======================="
 
 printf "\n+++++++++++ Creating Schema myreads +++++++++++\n"
 
-curl --location --request POST $1 \
+curl --location --request POST ${HARPERDB_HOST} \
 --header 'Content-Type: application/json' \
---header "Authorization: Basic $2" \
+--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 --data-raw '{
 	"operation":"create_schema",
 	"schema": "myreads"
@@ -16,9 +14,9 @@ curl --location --request POST $1 \
 
 printf "\n+++++++++++ Creating table users +++++++++++\n"
 
-curl --location --request POST $1 \
+curl --location --request POST ${HARPERDB_HOST} \
 --header 'Content-Type: application/json' \
---header "Authorization: Basic $2" \
+--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 --data-raw '{
 	"operation":"create_table",
 	"schema":"myreads",
@@ -28,9 +26,9 @@ curl --location --request POST $1 \
 
 printf "\n+++++++++++ Creating table books +++++++++++\n"
 
-curl --location --request POST $1 \
+curl --location --request POST ${HARPERDB_HOST} \
 --header 'Content-Type: application/json' \
---header "Authorization: Basic $2" \
+--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 --data-raw '{
 	"operation":"create_table",
 	"schema":"myreads",
@@ -40,9 +38,9 @@ curl --location --request POST $1 \
 
 printf "\n+++++++++++ Inserting dummy data in users table to initialise +++++++++++\n"
 
-curl --location --request POST $1 \
+curl --location --request POST ${HARPERDB_HOST} \
 --header 'Content-Type: application/json' \
---header "Authorization: Basic $2" \
+--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 --data-raw '{
   "operation":"sql",
   "sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''dummy'\'', '\''summy'\'', '\''dymmy'\'')"
@@ -50,9 +48,9 @@ curl --location --request POST $1 \
 
 printf "\n+++++++++++ Inserting dummy data in books table to initialise +++++++++++\n"
 
-curl --location --request POST $1 \
+curl --location --request POST ${HARPERDB_HOST} \
 --header 'Content-Type: application/json' \
---header "Authorization: Basic $2" \
+--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 --data-raw '{
   "operation":"sql",
   "sql": "INSERT INTO myreads.books (name, userid, status, image, author) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
@@ -60,4 +58,6 @@ curl --location --request POST $1 \
 
 printf "\n======================= Starting Server =======================\n"
 
-HARPERDB_HOST=$1 HARPERDB_UNAME=$3 HARPERDB_PSWD=$4 go run main.go
+# HARPERDB_HOST=$1 HARPERDB_UNAME=$3 HARPERDB_PSWD=$4 go run main.go
+
+/server/myreads
