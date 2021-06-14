@@ -55,7 +55,7 @@ curl --location --request POST $1 \
 --header "Authorization: Basic $2" \
 --data-raw '{
   "operation":"sql",
-  "sql": "INSERT INTO myreads.books (name, userid, status, image) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
+  "sql": "INSERT INTO myreads.books (name, userid, status, image, author) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
 }'
 
 printf "\n======================= Starting Server =======================\n"

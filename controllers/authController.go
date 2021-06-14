@@ -104,7 +104,7 @@ func Login(c *fiber.Ctx) error {
 		log.Println("ERROR: Login: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
-			"message": fmt.Sprintf("ERROR: Login: %v", err),
+			"message": "Internal server error",
 			"status":  fiber.StatusInternalServerError,
 		})
 	}
