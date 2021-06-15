@@ -1,31 +1,41 @@
-FROM golang:alpine
+FROM golang:alpine AS builder
+
+# Set necessary environmet variables needed for our image
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=amd64
+
+# Move to working directory /build
+WORKDIR /build
+
+# Copy and download dependency using go mod
+COPY . .
+RUN go mod download
+
+# Build the application
+RUN go build -o myreads .
+
+
+FROM alpine
 
 ARG DB_HOST
 ARG BASIC_AUTH_TOKEN
 ARG HDB_ADMIN
 ARG PASSWORD
 
-# Set necessary environmet variables needed for our image
-ENV CGO_ENABLED=1
-ENV GOOS=linux
-ENV GOARCH=amd64
 ENV HARPERDB_HOST=${DB_HOST}
 ENV BASIC_AUTH_TOKEN=${BASIC_AUTH_TOKEN}
 ENV HARPERDB_UNAME=${HDB_ADMIN}
 ENV HARPERDB_PSWD=${PASSWORD}
 
-# Move to working directory /build
 WORKDIR /server
 
-# Copy and download dependency using go mod
-COPY . .
-RUN go mod download
+COPY --from=builder /build/myreads .
+
+COPY  ./initiate_server.sh .
 
 # Make initiate_server.sh executable
 RUN chmod +x ./initiate_server.sh
-
-# Build the application
-RUN go build -o myreads .
 
 # Install curl
 RUN apk --no-cache add curl

@@ -1,8 +1,6 @@
 package database
 
 import (
-	"log"
-
 	"github.com/HarperDB/harperdb-sdk-go"
 )
 
@@ -22,15 +20,5 @@ func Init(host, username, password, schema string) {
 			"users": schema + ".users",
 			"books": schema + ".books",
 		},
-	}
-
-	err := GlobalClient.DB.CreateTable(GlobalClient.Schema, "users", "id")
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = GlobalClient.DB.CreateTable(GlobalClient.Schema, "books", "id")
-	if err != nil {
-		log.Println(err)
 	}
 }
