@@ -47,7 +47,7 @@ then
 	--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 	--data-raw '{
 	"operation":"sql",
-	"sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''dummy'\'', '\''summy'\'', '\''dymmy'\'')"
+	"sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''dummy'\'', '\''dummy'\'', '\''dymmy'\'')"
 	}'
 
 	printf "\n+++++++++++ Inserting dummy data in books table to initialise +++++++++++\n"
