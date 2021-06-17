@@ -15,9 +15,9 @@ import (
 const SecretKey = "secret"
 
 func Register(c *fiber.Ctx) error {
-	var data map[string]string
-
-	if err := c.BodyParser(&data); err != nil {
+	// var data map[string]string
+	user := new(models.User)
+	if err := c.BodyParser(user); err != nil {
 		log.Println("ERROR: Register: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
@@ -26,13 +26,8 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
-	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
-
-	user := &models.User{
-		Name:     data["name"],
-		Email:    data["email"],
-		Password: password,
-	}
+	password, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+	user.Password = string(password)
 
 	tableName := database.GlobalClient.Table["users"]
 	sql := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, user.Email)
@@ -82,9 +77,9 @@ func Register(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	var data map[string]string
+	user := new(models.User)
 
-	if err := c.BodyParser(&data); err != nil {
+	if err := c.BodyParser(user); err != nil {
 		log.Println("ERROR: Login: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
@@ -94,7 +89,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	tableName := database.GlobalClient.Table["users"]
-	sql := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, data["email"])
+	sql := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, user.Email)
 
 	log.Println("LOGIN: QUERY EXEC: ", sql)
 	var res []interface{}
@@ -121,14 +116,14 @@ func Login(c *fiber.Ctx) error {
 	var fetchedUser map[string]interface{}
 	fetchedUser = res[0].(map[string]interface{})
 
-	var user = &models.User{
+	var foundUser = &models.User{
 		Id:       fmt.Sprintf("%v", fetchedUser["id"]),
 		Email:    fmt.Sprintf("%v", fetchedUser["email"]),
 		Name:     fmt.Sprintf("%v", fetchedUser["name"]),
-		Password: []byte(fmt.Sprintf("%v", fetchedUser["password"])),
+		Password: fmt.Sprintf("%v", fetchedUser["password"]),
 	}
 
-	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password)); err != nil {
 		log.Println("ERROR: Login: ", err)
 		c.Status(fiber.StatusUnauthorized)
 		return c.JSON(fiber.Map{
@@ -138,7 +133,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Issuer:    user.Id,
+		Issuer:    foundUser.Id,
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
 
@@ -165,14 +160,13 @@ func Login(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "Login Success",
 		"status":  fiber.StatusOK,
-		"user":    user,
+		"user":    foundUser,
 	})
 	// return c.JSON(user)
 }
 
 func getIssuer(c *fiber.Ctx) (string, error) {
 	cookie := c.Cookies("jwt")
-
 	if cookie == "" {
 		log.Println("ERROR: getIssuer: empty cookie")
 		c.Status(fiber.StatusUnauthorized)
@@ -234,7 +228,7 @@ func User(c *fiber.Ctx) error {
 		Id:       fmt.Sprintf("%v", fetchedUser["id"]),
 		Email:    fmt.Sprintf("%v", fetchedUser["email"]),
 		Name:     fmt.Sprintf("%v", fetchedUser["name"]),
-		Password: []byte(fmt.Sprintf("%v", fetchedUser["password"])),
+		Password: fmt.Sprintf("%v", fetchedUser["password"]),
 	}
 
 	return c.JSON(fiber.Map{

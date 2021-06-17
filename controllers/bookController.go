@@ -18,9 +18,9 @@ var (
 )
 
 func BookEntry(c *fiber.Ctx) error {
-	var data map[string]interface{}
+	book := new(models.Book)
 
-	if err := c.BodyParser(&data); err != nil {
+	if err := c.BodyParser(book); err != nil {
 		log.Println("ERROR: BookEntry: BodyParser: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
@@ -38,18 +38,11 @@ func BookEntry(c *fiber.Ctx) error {
 			"status":  fiber.StatusUnauthorized,
 		})
 	}
-
-	book := &models.Book{
-		Name:   fmt.Sprintf("%v", data["name"]),
-		Userid: issuer,
-		Status: fmt.Sprintf("%v", data["status"]),
-		Image:  fmt.Sprintf("%v", data["image"]),
-		Author: fmt.Sprintf("%v", data["author"]),
-	}
+	book.Userid = issuer
 
 	tableName := database.GlobalClient.Table["books"]
 
-	sql := fmt.Sprintf("SELECT * FROM %s WHERE userid = '%s' AND name = '%s'", tableName, issuer, book.Name)
+	sql := fmt.Sprintf("SELECT * FROM %s WHERE userid = '%s' AND name = '%s'", tableName, book.Userid, book.Name)
 
 	log.Println("QUERY EXEC: GetBooks: ", sql)
 	var res1 []interface{}
@@ -124,12 +117,7 @@ func GetBoooks(c *fiber.Ctx, which *BookStatus) error {
 
 	if len(res) == 0 {
 		log.Println("ERROR: GetBooks: Empty bookshelf")
-		// c.Status(fiber.StatusNotFound)
 		return c.Status(fiber.StatusNotFound).SendString("Empty bookshelf")
-		// return c.JSON(fiber.Map{
-		// 	"message": "Empty bookshelf",
-		// 	"status":  fiber.StatusNotFound,
-		// })
 	}
 
 	return c.JSON(res)

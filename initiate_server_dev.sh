@@ -2,61 +2,61 @@
 
 set -o pipefail
 
-# printf "======================= Initialising database ======================="
+printf "======================= Initialising database ======================="
 
-# printf "\n+++++++++++ Creating Schema myreads +++++++++++\n"
+printf "\n+++++++++++ Creating Schema myreads +++++++++++\n"
 
-# curl --location --request POST $1 \
-# --header 'Content-Type: application/json' \
-# --header "Authorization: Basic $2" \
-# --data-raw '{
-# 	"operation":"create_schema",
-# 	"schema": "myreads"
-# }'
+curl --location --request POST $1 \
+--header 'Content-Type: application/json' \
+--header "Authorization: Basic $2" \
+--data-raw '{
+	"operation":"create_schema",
+	"schema": "myreads"
+}'
 
-# printf "\n+++++++++++ Creating table users +++++++++++\n"
+printf "\n+++++++++++ Creating table users +++++++++++\n"
 
-# curl --location --request POST $1 \
-# --header 'Content-Type: application/json' \
-# --header "Authorization: Basic $2" \
-# --data-raw '{
-# 	"operation":"create_table",
-# 	"schema":"myreads",
-# 	"table":"users",
-# 	"hash_attribute": "id"
-# }'
+curl --location --request POST $1 \
+--header 'Content-Type: application/json' \
+--header "Authorization: Basic $2" \
+--data-raw '{
+	"operation":"create_table",
+	"schema":"myreads",
+	"table":"users",
+	"hash_attribute": "id"
+}'
 
-# printf "\n+++++++++++ Creating table books +++++++++++\n"
+printf "\n+++++++++++ Creating table books +++++++++++\n"
 
-# curl --location --request POST $1 \
-# --header 'Content-Type: application/json' \
-# --header "Authorization: Basic $2" \
-# --data-raw '{
-# 	"operation":"create_table",
-# 	"schema":"myreads",
-# 	"table":"books",
-# 	"hash_attribute": "id"
-# }'
+curl --location --request POST $1 \
+--header 'Content-Type: application/json' \
+--header "Authorization: Basic $2" \
+--data-raw '{
+	"operation":"create_table",
+	"schema":"myreads",
+	"table":"books",
+	"hash_attribute": "id"
+}'
 
-# printf "\n+++++++++++ Inserting dummy data in users table to initialise +++++++++++\n"
+printf "\n+++++++++++ Inserting dummy data in users table to initialise +++++++++++\n"
 
-# curl --location --request POST $1 \
-# --header 'Content-Type: application/json' \
-# --header "Authorization: Basic $2" \
-# --data-raw '{
-#   "operation":"sql",
-#   "sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''dummy'\'', '\''dummy'\'', '\''dymmy'\'')"
-# }'
+curl --location --request POST $1 \
+--header 'Content-Type: application/json' \
+--header "Authorization: Basic $2" \
+--data-raw '{
+  "operation":"sql",
+  "sql": "INSERT INTO myreads.users (name, email, password) VALUES('\''dummy'\'', '\''dummy'\'', '\''dymmy'\'')"
+}'
 
-# printf "\n+++++++++++ Inserting dummy data in books table to initialise +++++++++++\n"
+printf "\n+++++++++++ Inserting dummy data in books table to initialise +++++++++++\n"
 
-# curl --location --request POST $1 \
-# --header 'Content-Type: application/json' \
-# --header "Authorization: Basic $2" \
-# --data-raw '{
-#   "operation":"sql",
-#   "sql": "INSERT INTO myreads.books (name, userid, status) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
-# }'
+curl --location --request POST $1 \
+--header 'Content-Type: application/json' \
+--header "Authorization: Basic $2" \
+--data-raw '{
+  "operation":"sql",
+  "sql": "INSERT INTO myreads.books (name, userid, status) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
+}'
 
 printf "\n======================= Starting Server ======================="
 
