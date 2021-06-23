@@ -57,7 +57,7 @@ then
 	--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 	--data-raw '{
 	"operation":"sql",
-	"sql": "INSERT INTO myreads.books (name, userid, status, image, author) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
+	"sql": "INSERT INTO myreads.books (name, userid, status, imagePath, author) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
 	}'
 fi
 

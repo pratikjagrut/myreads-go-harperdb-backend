@@ -1,5 +1,10 @@
 FROM golang:alpine AS builder
 
+ARG DB_HOST
+ARG BASIC_AUTH_TOKEN
+ARG HDB_ADMIN
+ARG PASSWORD
+
 # Set necessary environmet variables needed for our image
 ENV CGO_ENABLED=1
 ENV GOOS=linux

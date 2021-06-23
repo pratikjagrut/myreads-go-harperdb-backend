@@ -18,15 +18,25 @@ var (
 )
 
 func BookEntry(c *fiber.Ctx) error {
-	book := new(models.Book)
+	form, err := c.MultipartForm()
+	if err != nil {
+		log.Println("ERROR: BookEntry: Form: ", err)
+		return err
+	}
 
-	if err := c.BodyParser(book); err != nil {
+	if err = c.BodyParser(form); err != nil {
 		log.Println("ERROR: BookEntry: BodyParser: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
 			"message": "Internal server error",
 			"status":  fiber.StatusInternalServerError,
 		})
+	}
+
+	book := &models.Book{
+		Author: form.Value["author"][0],
+		Name:   form.Value["name"][0],
+		Status: form.Value["status"][0],
 	}
 
 	issuer, err := getIssuer(c)
@@ -44,7 +54,7 @@ func BookEntry(c *fiber.Ctx) error {
 
 	sql := fmt.Sprintf("SELECT * FROM %s WHERE userid = '%s' AND name = '%s'", tableName, book.Userid, book.Name)
 
-	log.Println("QUERY EXEC: GetBooks: ", sql)
+	log.Println("QUERY EXEC: BookEntry: ", sql)
 	var res1 []interface{}
 	err = database.GlobalClient.DB.SQLSelect(&res1, sql)
 
@@ -66,8 +76,18 @@ func BookEntry(c *fiber.Ctx) error {
 		})
 	}
 
-	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, image, author) VALUES('%s', '%s', '%s', '%s', '%s')",
-		tableName, book.Name, book.Status, book.Userid, book.Image, book.Author)
+	images := form.File["image"]
+	book.ImagePath = fmt.Sprintf("./images/%s_%s", book.Userid, images[0].Filename)
+	err = c.SaveFile(images[0], book.ImagePath)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println(book)
+	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, imagePath, author) VALUES('%s', '%s', '%s', '%s', '%s')",
+		tableName, book.Name, book.Status, book.Userid, book.ImagePath, book.Author)
 
 	log.Println("QUERY EXEC: INSERT BOOK: ", sql)
 	res, err := database.GlobalClient.DB.SQLExec(sql)
@@ -120,13 +140,30 @@ func GetBoooks(c *fiber.Ctx, which *BookStatus) error {
 		return c.Status(fiber.StatusNotFound).SendString("Empty bookshelf")
 	}
 
+	books := []models.Book{}
+
+	for _, r := range res {
+		v, _ := r.(map[string]interface{})
+
+		books = append(books, models.Book{
+			Author:    fmt.Sprintf("%s", v["author"]),
+			Id:        fmt.Sprintf("%s", v["id"]),
+			ImagePath: fmt.Sprintf("%s", v["imagePath"]),
+			Name:      fmt.Sprintf("%s", v["name"]),
+			Status:    fmt.Sprintf("%s", v["status"]),
+			Userid:    fmt.Sprintf("%s", v["userid"]),
+		})
+	}
+	// fmt.Println("file")
+	// return c.SendFile(books[0].ImagePath)
+
 	return c.JSON(res)
 }
 
 func UpdateStatus(c *fiber.Ctx) error {
-	var data map[string]string
+	book := new(models.Book)
 
-	if err := c.BodyParser(&data); err != nil {
+	if err := c.BodyParser(book); err != nil {
 		log.Println("ERROR: UpdateStatus: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
@@ -142,11 +179,6 @@ func UpdateStatus(c *fiber.Ctx) error {
 			"message": "Unauthorized",
 			"status":  fiber.StatusUnauthorized,
 		})
-	}
-
-	book := &models.Book{
-		Id:     data["id"],
-		Status: data["status"],
 	}
 
 	tableName := database.GlobalClient.Table["books"]
@@ -181,9 +213,9 @@ func UpdateStatus(c *fiber.Ctx) error {
 }
 
 func DeleteBook(c *fiber.Ctx) error {
-	var data map[string]string
+	book := new(models.Book)
 
-	if err := c.BodyParser(&data); err != nil {
+	if err := c.BodyParser(book); err != nil {
 		log.Println("ERROR: DeleteBook: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return c.JSON(fiber.Map{
@@ -199,11 +231,6 @@ func DeleteBook(c *fiber.Ctx) error {
 			"message": "Unauthorized",
 			"status":  fiber.StatusUnauthorized,
 		})
-	}
-
-	book := &models.Book{
-		Id:   data["id"],
-		Name: data["name"],
 	}
 
 	tableName := database.GlobalClient.Table["books"]
@@ -236,4 +263,52 @@ func DeleteBook(c *fiber.Ctx) error {
 		"message": fmt.Sprintf("Book \"%s\" removed from your bookshelf.", book.Name),
 		"status":  fiber.StatusOK,
 	})
+}
+
+func GetImage(c *fiber.Ctx) error {
+	book := new(models.Book)
+
+	if err := c.BodyParser(book); err != nil {
+		log.Println("ERROR: UpdateStatus: ", err)
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error",
+		})
+	}
+
+	_, err := getIssuer(c)
+	if err != nil {
+		log.Println("ERROR: UpdateStatus: getIssuer", err)
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Unauthorized",
+			"status":  fiber.StatusUnauthorized,
+		})
+	}
+
+	tableName := database.GlobalClient.Table["books"]
+	sql := fmt.Sprintf("SELECT imagePath FROM %s WHERE ID = '%s'", tableName, book.Id)
+
+	log.Println("QUERY EXEC: UpdateStatus: ", sql)
+	res, err := database.GlobalClient.DB.SQLExec(sql)
+
+	if err != nil {
+		log.Println("ERROR: UpdateStatus: ", err)
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error",
+		})
+	}
+
+	if res.Message == "updated 0 of 0 records" {
+		log.Println("ERROR: DeleteBook: ", res.Message)
+		c.Status(fiber.StatusNotFound)
+		return c.JSON(fiber.Map{
+			"message": "This book is not present in your bookshelf",
+		})
+	}
+
+	log.Println("UPDATE BOOK: ", res)
+
+	return c.JSON(res)
 }

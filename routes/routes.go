@@ -28,4 +28,5 @@ func Setup(app *fiber.App) {
 	})
 	app.Post("/api/books/updatestatus", controllers.UpdateStatus)
 	app.Post("/api/books/deletebook", controllers.DeleteBook)
+	app.Get("/api/books/getimage", controllers.GetImage)
 }
