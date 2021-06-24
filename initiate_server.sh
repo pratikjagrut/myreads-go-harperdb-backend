@@ -57,12 +57,13 @@ then
 	--header "Authorization: Basic ${BASIC_AUTH_TOKEN}" \
 	--data-raw '{
 	"operation":"sql",
-	"sql": "INSERT INTO myreads.books (name, userid, status, imagePath, author) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
+	"sql": "INSERT INTO myreads.books (name, userid, status, image, author, description) VALUES('\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'', '\''dummy'\'')"
 	}'
 fi
 
 printf "\n======================= Starting Server =======================\n"
 
+mkdir images
 # HARPERDB_HOST=$1 HARPERDB_UNAME=$3 HARPERDB_PSWD=$4 go run main.go
 
 ./myreads

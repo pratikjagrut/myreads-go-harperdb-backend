@@ -3,8 +3,10 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/pratikjagrut/myreads-go-backend/database"
 	"github.com/pratikjagrut/myreads-go-backend/models"
 )
@@ -34,9 +36,10 @@ func BookEntry(c *fiber.Ctx) error {
 	}
 
 	book := &models.Book{
-		Author: form.Value["author"][0],
-		Name:   form.Value["name"][0],
-		Status: form.Value["status"][0],
+		Author:      form.Value["author"][0],
+		Name:        form.Value["name"][0],
+		Status:      form.Value["status"][0],
+		Description: form.Value["description"][0],
 	}
 
 	issuer, err := getIssuer(c)
@@ -76,18 +79,24 @@ func BookEntry(c *fiber.Ctx) error {
 		})
 	}
 
+	new_uuid := uuid.New().String()
 	images := form.File["image"]
-	book.ImagePath = fmt.Sprintf("./images/%s_%s", book.Userid, images[0].Filename)
-	err = c.SaveFile(images[0], book.ImagePath)
+	book.Image = fmt.Sprintf("%s_%s", new_uuid, images[0].Filename)
+	staticLoc := fmt.Sprintf("./images/%s", book.Image)
+	err = c.SaveFile(images[0], staticLoc)
 
 	if err != nil {
 		log.Println(err)
-		return err
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error",
+			"status":  fiber.StatusInternalServerError,
+		})
 	}
 
 	log.Println(book)
-	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, imagePath, author) VALUES('%s', '%s', '%s', '%s', '%s')",
-		tableName, book.Name, book.Status, book.Userid, book.ImagePath, book.Author)
+	sql = fmt.Sprintf("INSERT INTO %s (name, status, userid, image, author, description) VALUES('%s', '%s', '%s', '%s', '%s', '%s')",
+		tableName, book.Name, book.Status, book.Userid, book.Image, book.Author, book.Description)
 
 	log.Println("QUERY EXEC: INSERT BOOK: ", sql)
 	res, err := database.GlobalClient.DB.SQLExec(sql)
@@ -139,23 +148,6 @@ func GetBoooks(c *fiber.Ctx, which *BookStatus) error {
 		log.Println("ERROR: GetBooks: Empty bookshelf")
 		return c.Status(fiber.StatusNotFound).SendString("Empty bookshelf")
 	}
-
-	books := []models.Book{}
-
-	for _, r := range res {
-		v, _ := r.(map[string]interface{})
-
-		books = append(books, models.Book{
-			Author:    fmt.Sprintf("%s", v["author"]),
-			Id:        fmt.Sprintf("%s", v["id"]),
-			ImagePath: fmt.Sprintf("%s", v["imagePath"]),
-			Name:      fmt.Sprintf("%s", v["name"]),
-			Status:    fmt.Sprintf("%s", v["status"]),
-			Userid:    fmt.Sprintf("%s", v["userid"]),
-		})
-	}
-	// fmt.Println("file")
-	// return c.SendFile(books[0].ImagePath)
 
 	return c.JSON(res)
 }
@@ -234,8 +226,10 @@ func DeleteBook(c *fiber.Ctx) error {
 	}
 
 	tableName := database.GlobalClient.Table["books"]
-	sql := fmt.Sprintf("DELETE FROM %s WHERE id = '%s'",
-		tableName, book.Id)
+
+	imagePath := fmt.Sprintf("./images/%s", book.Image)
+
+	sql := fmt.Sprintf("DELETE FROM %s WHERE id = '%s'", tableName, book.Id)
 
 	log.Println("QUERY EXEC: DeleteBook: ", sql)
 	res, err := database.GlobalClient.DB.SQLExec(sql)
@@ -256,6 +250,10 @@ func DeleteBook(c *fiber.Ctx) error {
 		})
 	}
 
+	if err = os.Remove(imagePath); err != nil {
+		return err
+	}
+
 	log.Println("Delete Book: ", res)
 
 	c.Status(fiber.StatusOK)
@@ -263,52 +261,4 @@ func DeleteBook(c *fiber.Ctx) error {
 		"message": fmt.Sprintf("Book \"%s\" removed from your bookshelf.", book.Name),
 		"status":  fiber.StatusOK,
 	})
-}
-
-func GetImage(c *fiber.Ctx) error {
-	book := new(models.Book)
-
-	if err := c.BodyParser(book); err != nil {
-		log.Println("ERROR: UpdateStatus: ", err)
-		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-		})
-	}
-
-	_, err := getIssuer(c)
-	if err != nil {
-		log.Println("ERROR: UpdateStatus: getIssuer", err)
-		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Unauthorized",
-			"status":  fiber.StatusUnauthorized,
-		})
-	}
-
-	tableName := database.GlobalClient.Table["books"]
-	sql := fmt.Sprintf("SELECT imagePath FROM %s WHERE ID = '%s'", tableName, book.Id)
-
-	log.Println("QUERY EXEC: UpdateStatus: ", sql)
-	res, err := database.GlobalClient.DB.SQLExec(sql)
-
-	if err != nil {
-		log.Println("ERROR: UpdateStatus: ", err)
-		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-		})
-	}
-
-	if res.Message == "updated 0 of 0 records" {
-		log.Println("ERROR: DeleteBook: ", res.Message)
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.Map{
-			"message": "This book is not present in your bookshelf",
-		})
-	}
-
-	log.Println("UPDATE BOOK: ", res)
-
-	return c.JSON(res)
 }
