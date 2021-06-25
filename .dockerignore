@@ -1,0 +1,7 @@
+images
+.git
+.gitignore
+.dockerignore
+Docekrfile
+Docekrfile.multistage
+README.md

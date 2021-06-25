@@ -63,7 +63,4 @@ fi
 
 printf "\n======================= Starting Server =======================\n"
 
-mkdir images
-# HARPERDB_HOST=$1 HARPERDB_UNAME=$3 HARPERDB_PSWD=$4 go run main.go
-
 ./myreads

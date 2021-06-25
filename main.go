@@ -20,7 +20,7 @@ func main() {
 	}))
 
 	routes.Setup(app)
-	app.Static("/api/static", "./images")
-	app.Listen(":8000")
+	app.Static("/api/static", "./"+os.Getenv("IMAGES_DIR"))
+	app.Listen(":" + os.Getenv("PORT"))
 
 }
