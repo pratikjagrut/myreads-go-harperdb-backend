@@ -8,7 +8,7 @@ Here you can maintain the status of the books in three categories.
 2. Reading List: Books you're currently reading.
 3. Finished List: Books you finished reading.
 ```
-# myreads-go-backend
+# myreads-go-harperdb-backend
 
 This project is a backend server for the Myreads project.
 This project uses HARPERDB as a database, so most of the things are hardcoded.
@@ -35,7 +35,7 @@ To run the server, make sure you've docker installed.
 ### Clone the repo
 
 ```sh
-git clone https://github.com/pratikjagrut/myreads-go-backend.git
+git clone https://github.com/pratikjagrut/myreads-go-harperdb-backend.git
 ```
 ### Build container image
 

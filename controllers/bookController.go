@@ -7,8 +7,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/pratikjagrut/myreads-go-backend/database"
-	"github.com/pratikjagrut/myreads-go-backend/models"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/database"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/models"
 )
 
 type BookStatus string

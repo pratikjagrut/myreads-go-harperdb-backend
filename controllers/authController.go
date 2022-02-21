@@ -7,8 +7,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
-	"github.com/pratikjagrut/myreads-go-backend/database"
-	"github.com/pratikjagrut/myreads-go-backend/models"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/database"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/models"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/pratikjagrut/myreads-go-backend/controllers"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/controllers"
 )
 
 func Setup(app *fiber.App) {

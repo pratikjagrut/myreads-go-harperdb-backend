@@ -5,8 +5,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/pratikjagrut/myreads-go-backend/database"
-	"github.com/pratikjagrut/myreads-go-backend/routes"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/database"
+	"github.com/pratikjagrut/myreads-go-harperdb-backend/routes"
 )
 
 func main() {
